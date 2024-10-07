@@ -1,0 +1,37 @@
+---
+title: "Homework 3"
+output: github_document
+---
+
+```{r, message = FALSE, echo = FALSE}
+library(tidyverse)
+library(p8105.datasets)
+```
+
+# Problem 1
+
+## importing data and cleaning up
+```{r}
+ny_noaa = data("ny_noaa")
+```
+
+# Problem 2
+
+## importing data and cleaning up
+```{r}
+participant = read_csv("data/participant.csv", skip = 4) %>% 
+  janitor::clean_names()
+
+accelerometer = read_csv("data/accelerometer.csv",) %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    cols = min1:min1440,
+    names_to = "time_elsaped",
+    values_to = "mims",
+    names_prefix = "min"
+  )
+
+study = left_join(participant, accelerometer, by = "seqn")
+
+```
+
