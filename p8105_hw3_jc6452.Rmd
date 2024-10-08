@@ -12,7 +12,8 @@ library(p8105.datasets)
 
 ## importing data and cleaning up
 ```{r}
-ny_noaa = data("ny_noaa")
+data("ny_noaa")
+
 ```
 
 # Problem 2
@@ -21,17 +22,33 @@ ny_noaa = data("ny_noaa")
 ```{r}
 participant = read_csv("data/participant.csv", skip = 4) %>% 
   janitor::clean_names()
+  
 
 accelerometer = read_csv("data/accelerometer.csv",) %>% 
   janitor::clean_names() %>% 
   pivot_longer(
     cols = min1:min1440,
-    names_to = "time_elsaped",
+    names_to = "time_elasped",
+    names_transform = list(time_elasped = as.integer),
     values_to = "mims",
     names_prefix = "min"
   )
 
-study = left_join(participant, accelerometer, by = "seqn")
+study = left_join(participant, accelerometer, by = "seqn") %>% 
+  mutate(
+    sex = case_match(
+      sex,
+      1 ~ "male",
+      2 ~ "female"),
+    education = as.factor(education)
+    )%>% 
+  filter(age >= 21) %>% 
+  drop_na(education)
+```
 
+
+```{r sex }
+education_sex = study %>%
+  group_by(education)
 ```
 
