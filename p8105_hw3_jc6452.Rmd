@@ -6,6 +6,28 @@ output: github_document
 ```{r, message = FALSE, echo = FALSE}
 library(tidyverse)
 library(p8105.datasets)
+library(ggridges)
+library(patchwork)
+
+
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 # Problem 1
@@ -14,6 +36,41 @@ library(p8105.datasets)
 ```{r}
 data("ny_noaa")
 
+ny_noaa %>% 
+  count(snow) %>%
+  arrange(desc(n))
+
+ny_noaa = 
+  ny_noaa %>% 
+  separate(date, into = c("year", "month", "day"), convert = TRUE) %>% 
+  mutate(
+    tmax = as.numeric(tmax),
+    tmin = as.numeric(tmin))
+```
+
+```{r}
+ny_noaa %>% 
+  group_by(id, year, month) %>% 
+  filter(month %in% c(1, 7)) %>% 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE, color = id)) %>% 
+  ggplot(aes(x = year, y = mean_tmax, group = id)) + geom_point() + geom_path() +
+  facet_grid(~month) +
+  labs(title = "Mean monthly temperature for each station across years for January and July")
+```
+
+```{r}
+hex = 
+  ny_noaa %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex()
+
+ridge = 
+  ny_noaa %>% 
+  filter(snow < 100, snow > 0) %>%
+  ggplot(aes(x = snow, y = as.factor(year))) + 
+  geom_density_ridges()
+
+hex + ridge
 ```
 
 # Problem 2
@@ -22,7 +79,6 @@ data("ny_noaa")
 ```{r}
 participant = read_csv("data/participant.csv", skip = 4) %>% 
   janitor::clean_names()
-  
 
 accelerometer = read_csv("data/accelerometer.csv",) %>% 
   janitor::clean_names() %>% 
@@ -44,11 +100,13 @@ study = left_join(participant, accelerometer, by = "seqn") %>%
     )%>% 
   filter(age >= 21) %>% 
   drop_na(education)
+
+
 ```
 
 
 ```{r sex }
 education_sex = study %>%
-  group_by(education)
+  group_by
 ```
 
