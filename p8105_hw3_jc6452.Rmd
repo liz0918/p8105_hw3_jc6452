@@ -144,9 +144,6 @@ July2024 = read_csv("data/citibike/July 2024 Citi.csv.zip") %>%
     date = "July2024"
   )
 
-citi = Jan2020 %>% 
-  pivot_longer(
-    Jan2024
-  )
+
 ```
 
