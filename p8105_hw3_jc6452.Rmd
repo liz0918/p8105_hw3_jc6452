@@ -9,8 +9,6 @@ library(p8105.datasets)
 library(ggridges)
 library(patchwork)
 
-
-
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
@@ -83,7 +81,14 @@ participant = read_csv("data/participant.csv", skip = 4) %>%
     sex = case_match(
       sex,
       1 ~ "male",
-      2 ~ "female")
+      2 ~ "female"),
+    education = case_match(
+      education,
+      1 ~ "Less than high school",
+      2 ~ "High school equivalent",
+      3 ~ "More than high school"
+    ),
+    education = as.factor(education)
   )
 
 accelerometer = read_csv("data/accelerometer.csv",) %>% 
@@ -97,53 +102,153 @@ accelerometer = read_csv("data/accelerometer.csv",) %>%
   )
 
 study = left_join(participant, accelerometer, by = "seqn") %>% 
-  mutate(
-    education = as.factor(education)
-    )%>% 
   filter(age >= 21) %>% 
   drop_na(education)
 ```
 
 
 ```{r sex }
-participant_sex = participant %>%
+participant %>%
   drop_na(education) %>% 
-  group_by(sex, education) %>% 
-  summarise(total_count = n(), .groups = 'drop') %>% 
-  as.data.frame()
+  count(sex, education)
 
+#Female Age Distribution
 participant %>% drop_na(education) %>% 
-  ggplot(aes(x= age, y = education)) +
-  geom_point(aes(color = sex )) + 
-  labs(title = "Age distributions for men and women in each education category.")
+  ggplot(aes(x= age, fill = education)) +
+  facet_grid(.~sex) +
+  geom_histogram(bins = 6, position = "dodge")+ 
+  labs(title = "Age distributions for male and female in each education category")
+```
+Based on the plot above, females in the 40 to have the greatest number of people that had more than high school level education. Generally, males demonstrate to have had greatest number of more than high school level education up until 60. After 60 age group, the general education level tends to decrease with greater number of both female and male population who had less than high school level education. Overall, the younger generation definitely seemed to be more invested in the level of education with trend of higher education decreasing as the age increases. 
+
+```{r}
+total_activity = aggregate(
+  study['mims'], by = study[c('seqn', 'sex', 'age', 'bmi', 'education')], FUN = 'sum'
+  ) %>% 
+  rename(total_activity = mims)
+
+total_activity %>% 
+ggplot(aes(x = age, y = total_activity, color = education))+
+  facet_grid(.~sex) +
+  geom_smooth(se = FALSE)+
+  geom_point()+ 
+  labs(title = "Total Activities vs Age",
+       x = "Age",
+       y = "Total Activities",
+       color = "Education") +
+  viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal() + 
+  theme(legend.position = "bottom")
+```
+Based on the plot above, I can observe that there is an overall decreasing total for all education level as age increases. Though one thing to note is that group with less than high school level education has the greatest total activities to begin with for both sex around age 20. 
+
+```{r}
+more_than_hs = 
+  study %>% 
+  filter(education == "More than high school")  %>% 
+  ggplot(aes(x = time_elasped/60, y= mims, color = sex)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE) +
+  labs(title = 'More than high school level education',
+       x = 'Time_elasped(hour)', 
+       y = 'Activity') +
+  theme(legend.position = "none")
+
+hs_equiv = 
+  study %>% 
+  filter(education == "High school equivalent") %>% 
+  ggplot(aes(x = time_elasped/60, y= mims, color = sex))  +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE) +
+  labs(title = 'High school level education',
+       x = 'time_elasped(hour)', 
+       y = 'Activity') +
+  theme(legend.position = "none")
+
+less_than_hs = 
+  study %>% 
+  filter(education == "Less than high school")  %>% 
+  ggplot(aes(x = time_elasped/60, y= mims, color = sex))  +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE) +
+  labs(title = 'Less than high school level education',
+       x = 'time_elasped(hour)',
+       y = 'Activity') + 
+  theme(legend.position = "bottom")
+
+(more_than_hs / hs_equiv) / less_than_hs
 ```
 
 ## Problem 3
-```{r}
+```{r, message = FALSE}
 Jan2020 = read_csv("data/citibike/Jan 2020 Citi.csv.zip") %>% 
   janitor::clean_names() %>% 
   mutate(
-    date = "Jan2020"
+    date = "Jan 2020"
   )
 
 Jan2024 = read_csv("data/citibike/Jan 2024 Citi.csv.zip") %>% 
   janitor::clean_names() %>% 
   mutate(
-    date = "Jan2024"
+    date = "Jan 2024"
   )
 
 July2020 = read_csv("data/citibike/July 2020 Citi.csv.zip") %>% 
   janitor::clean_names() %>% 
   mutate(
-    date = "July2020"
+    date = "July 2020"
   )
 
 July2024 = read_csv("data/citibike/July 2024 Citi.csv.zip") %>% 
   janitor::clean_names() %>% 
   mutate(
-    date = "July2024"
+    date = "July 2024"
   )
+```
 
 
+```{r}
+citi = bind_rows(
+  Jan2020, Jan2024, July2020, July2024
+)
+```
+
+
+```{r}
+citi %>% 
+  count(date, member_casual)
+```
+Based on the table above, we can see that Citi Bike members are take the ride more frequently overall. However, there has been a drastic increase in both casual and member riders in July 2024 compared to other dates.
+
+### 5 most popular starting stations for July 2024
+```{r}
+citi %>% 
+  filter(date == "July 2024") %>% 
+  count(start_station_name) %>% 
+  arrange(desc(n)) %>% 
+  head(5)
+```
+
+```{r}
+
+citi = citi %>% 
+  separate(date, c('month', 'year'), sep = " ", remove = TRUE)
+```
+
+```{r}
+weekdays = 
+  aggregate(x= citi['duration'], by = citi[c('weekdays')] , FUN = median)
+
+month = 
+  aggregate(x = citi['duration'], by = citi[c('month')], FUN = median)
+
+year =
+    aggregate(x = citi['duration'], by = citi[c('year')], FUN = median)
+```
+
+```{r}
+ggplot(data = weekdays, aes(x = weekdays, y = duration), color = year) +
+  geom_point() +
+  geom_smooth()
 ```
 
