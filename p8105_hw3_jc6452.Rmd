@@ -1,5 +1,7 @@
 ---
 title: "Homework 3"
+author: "Jeong Yun Choi"
+date: Oct.16.2024
 output: github_document
 ---
 
@@ -28,7 +30,7 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
-# Problem 1
+## Problem 1
 
 ## importing data and cleaning up
 ```{r}
@@ -140,12 +142,12 @@ ggplot(aes(x = age, y = total_activity, color = sex))+
   theme_minimal() + 
   theme(legend.position = "bottom")
 ```
-Based on the plot above, I can observe that there is an overall decreasing total for all education level as age increases. Though one thing to note is that group with less than high school level education has the greatest total activities to begin with for both sex around age 20. 
+Based on the plot above, I can observe that there is an overall decreasing activity for all education level as age increases. Also, the group with less than high school level education has the greatest total activities to begin with for both sex around age 20. For groups with more than high school level and high school equivalent level of education, the total activity for female seems to be generally higher throughout the age. Interestingly, the total activities demonstrates to be rather constant throughout the age for group with more than high school level education. 
 
 ```{r}
 study %>% 
   ggplot(aes(x = time_elasped/60, y= mims, color = sex)) +
-  geom_point(alpha = 0.5) +
+  geom_point(alpha = 0.15) +
   geom_smooth(aes(group = sex),se = FALSE) +
   facet_grid(.~education) +
   labs(title = 'More than high school level education',
@@ -154,7 +156,7 @@ study %>%
        color = 'Sex') +
   theme(legend.position = "bottom")
 ```
-The trend as seen via the smooth line demonstrates to be similar cross all three panels: There is an increase in the activity after 5 hours have elapsed and peaks around 10-12 hour. The acitivty slowly decreases after hour 20. While the "High school equivalent" and "Less than high school" education groups show similar patterns individually, the "more than high school" group shows some variability. Especially noting the predominantly female peak activity between hour 5-7 and predominantly male peak activity from hour 20-22 (8-10pm). 
+The trend as seen via the smooth line demonstrates to be similar cross all three panels: There is an increase in the activity after 5 hours have elapsed and peaks around 10-12 hour. The activity slowly decreases after hour 20. While the "High school equivalent" and "Less than high school" education groups show similar patterns individually, the "more than high school" group shows some variability. Especially noting the predominantly female peak activity between hour 5-7 and predominantly male peak activity from hour 20-22 (8-10pm). 
 
 ## Problem 3
 ```{r, message = FALSE}
@@ -228,7 +230,7 @@ citi_effect = citi %>%
   
 ```
 
-### plotting to see the trend for all different types of e
+### plotting to see the trend for median duration based on weekdays, month and year
 ```{r}
 citi_effect %>% 
   ggplot(aes(x = weekdays, y = median_duration, group = year, color = month)) +
@@ -244,8 +246,11 @@ citi_effect %>%
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 ```
+Based on the plot genearted above, there is an increase in median duration in riding the Citi Bike in July. Generally, July is in the middle of summer, so it's warmer to ride bikes than in January (winter). Looking at the weekday trends, generally there is an upward spike in the median duration for the weekends, starting from Friday. There seems to be a tendency in 2024, for people to take short bike rides on Sunday compared to other days in the weekend, and general decrease in the median duration compared to 2020. 
+
 ```{r}
 citi %>% 
+  filter(year == "2024") %>% 
   ggplot(aes(x = rideable_type, y = duration))+
   geom_violin() + 
   facet_grid(month ~ member_casual) + 
@@ -255,3 +260,4 @@ citi %>%
     y = "Ride Duration") +
   theme_minimal()
 ```
+The violin plot generated above shows the comparison of distribution among the types of bike, classic and electric, across different month for both casual and Citibike member riders. We can observe that overall there is a tendency for casual riders to ride for longer duration in July, likely due to warmer weather based on the wider density. There seems to be minimal difference between the violin plot for Citibike members throughout the months, except for shorter ride duration for electric bike in January. One reason could be that Citibike members utilize the bike for commuting and this will likely not change throughout the season. Another observation is that the electric bike tends to have shorter ride duration that classic bike. This could be due to the fact that electric bike will take less amount of time to arrive at the destination than classic bike, hence resulting in a shorter ride duration. Overall, the seasonal trend demonstrates a longer ride duration for July compared to January.
